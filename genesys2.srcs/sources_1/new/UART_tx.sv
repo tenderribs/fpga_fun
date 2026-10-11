@@ -1,11 +1,10 @@
 module UART_tx #(
     parameter int SYSCLK_F = 200_000_000,
-    parameter int BAUDRATE = 115200,
-    parameter int N_BITS   = 8
+    parameter int BAUDRATE = 115200
 ) (
     input logic clk_i,
     input logic start_i,
-    input logic [N_BITS - 1:0] tx_buf,
+    input logic [7:0] tx_buf_i,
     output logic tx_o,
     output logic done_o
 );
@@ -22,7 +21,7 @@ module UART_tx #(
 
   state_t state = IDLE;
   logic [$clog2(CycPerBit+1)-1:0] cyc_cnt = '0;  // number of cycles spend in state
-  logic [$clog2(N_BITS+1)-1:0] buf_idx = '0;  // idx of bit in tx_buf to put on the line
+  logic [7:0] buf_idx = '0;  // idx of bit in tx_buf to put on the line
 
   always_ff @(posedge clk_i) begin
     case (state)
@@ -49,9 +48,9 @@ module UART_tx #(
       end
 
       DATA: begin
-        if (buf_idx < N_BITS) begin
+        if (buf_idx < 8) begin
           if (cyc_cnt < CycPerBit) begin
-            tx_o <= tx_buf[buf_idx];
+            tx_o <= tx_buf_i[buf_idx];
             cyc_cnt <= cyc_cnt + 1;
           end else begin
             cyc_cnt <= '0;
